@@ -7,9 +7,11 @@
 
 ------------------------------------------------------------------------
 
-# 已完成（Day 1）
+# 已完成
 
-## 环境搭建
+## Stage 1：Python 基础 + 环境搭建（Day 1）
+
+### 环境搭建
 
 -   安装 Python 3.13
 -   创建并理解虚拟环境 `.venv`
@@ -18,7 +20,7 @@
 -   安装 `python-dotenv`
 -   学会 `pip list`、`pip freeze`、`pip show`
 
-## 项目结构
+### 项目结构
 
 ``` text
 agent_study/
@@ -30,22 +32,22 @@ agent_study/
 └── requirements.txt
 ```
 
-## 已完成模块
+### 已完成模块
 
-### config.py
+#### config.py
 
 -   使用 `.env`
 -   API Key 配置
 -   Base URL
 -   Model 配置
 
-### llm.py
+#### llm.py
 
 -   创建 OpenAI Client（连接 DeepSeek）
 -   封装 `chat(messages)` 接口
 -   返回 AI 回复文本
 
-### main.py
+#### main.py
 
 -   多轮聊天
 -   System Prompt
@@ -56,27 +58,78 @@ agent_study/
 -   `try/except`
 -   `exit` 退出
 
+---
+
+## Stage 2：Python 面向对象（Day 2）
+
+### 当前项目结构
+
+``` text
+agent_study/
+├── .venv/
+├── .env
+├── config.py       → 环境变量和 API 配置
+├── llm.py          → LLM 调用封装
+├── agent.py        → Agent 类（封装消息 + 调用 LLM）
+├── main.py         → 入口（循环 + 显示）
+└── requirements.txt
+```
+
+**依赖方向**：`config.py` ← `llm.py` ← `agent.py` ← `main.py`
+
+### agent.py
+
+-   `class Agent` — 封装对话状态和行为
+-   `__init__(system_prompt)` — 构造时接受可选的 system prompt
+-   `self.messages` — 成员变量，管理对话历史
+-   `chat(user_input) → str | None` — 核心方法：
+    -   用**临时列表**先试探 LLM（不污染 `self.messages`）
+    -   成功后再追加 user 消息和 assistant 消息
+    -   失败返回 `None`，`self.messages` 保持原样
+
+### main.py（重构后）
+
+-   从 48 行缩减到 24 行
+-   不再直接操作 `messages`、不直接调用 `llm.chat()`
+-   只负责：创建 Agent → 循环读输入 → 调用 `agent.chat()` → 打印结果
+-   输入校验（空输入、exit）留在 UI 层，不进入 Agent
+
+### 关键设计决策
+
+-   **先验证再提交**：用临时列表调 LLM，成功后才写 `self.messages`
+-   **Agent 不输出**：`chat()` 只 `return`，不 `print()`——为后续接入 FastAPI 做准备
+-   **错误向上传递**：异常和空响应统一返回 `None`，由调用方决定如何处理
+
 ------------------------------------------------------------------------
 
 # 已掌握 Python
 
--   import
--   from ... import ...
--   函数
--   类型提示
--   list
--   dict
--   append()
--   while True
--   break
--   input()
--   f-string
--   try/except
+## 基础语法（Stage 1）
+
+-   `import` / `from ... import ...`
+-   函数 / 类型提示
+-   `list` / `dict` / `append()`
+-   `while True` / `break`
+-   `input()` / `f-string`
+-   `try/except`
 -   模块拆分
+
+## 面向对象（Stage 2）
+
+-   `class` — 定义类
+-   `__init__(self, ...)` — 构造函数，PHP 的 `__construct()`
+-   `self` — 实例引用，PHP 的 `$this`
+-   成员变量 — `self.xxx = ...`
+-   成员方法 — `def method(self, ...):`
+-   `list + list` → 新列表（不修改原列表，无副作用）
+-   `return None` — 错误信号传递
+-   `from agent import Agent` — 直接导入类，避免模块名冲突
 
 ------------------------------------------------------------------------
 
 # 已掌握的软件设计思想
+
+## Stage 1
 
 -   单一职责
 -   配置与业务分离
@@ -84,18 +137,19 @@ agent_study/
 -   模块化
 -   LLM 与业务解耦
 
+## Stage 2
+
+-   **关注点分离**：UI 逻辑（main.py）与业务逻辑（agent.py）分层
+-   **先验证再提交**：操作外部依赖前先确认成功，再修改内部状态
+-   **错误向上传递**：底层返回错误信号（`None`），上层决定如何处理
+-   **面向接口编程**：main.py 依赖 Agent 的 `chat()` 接口，不关心内部实现
+-   **向后兼容设计**：`__init__` 参数给默认值，老代码不加参数也能跑
+
 ------------------------------------------------------------------------
 
 # 下一阶段（按顺序）
 
-## Stage 2：Python 面向对象
-
--   class
--   **init**
--   self
--   成员变量
--   成员方法
--   Agent 类
+## ~~Stage 2：Python 面向对象~~ ✅ 完成
 
 ## Stage 3：真正的 Agent
 
