@@ -100,6 +100,48 @@ agent_study/
 -   **Agent 不输出**：`chat()` 只 `return`，不 `print()`——为后续接入 FastAPI 做准备
 -   **错误向上传递**：异常和空响应统一返回 `None`，由调用方决定如何处理
 
+---
+
+## Stage 3-1：Memory 记忆系统（Day 3）
+
+### 当前项目结构
+
+``` text
+agent_study/
+├── .venv/
+├── .env
+├── config.py       → 环境变量和 API 配置
+├── llm.py          → LLM 调用封装
+├── memory.py       → Memory 类（消息存储、裁剪、清空）
+├── agent.py        → Agent 类（协调 Memory + LLM）
+├── main.py         → 入口（循环 + 显示）
+└── requirements.txt
+```
+
+**依赖方向**：`config.py ← llm.py ← agent.py → memory.py`，`agent.py ← main.py`
+
+### memory.py
+
+-   `class Memory` — 独立的记忆管理类
+-   `__init__(system_prompt, max_messages=20)` — 初始化记忆系统
+-   `self.system_prompt` — 单独存储，与对话历史分离，不会被误删
+-   `self.history` — 只存 user/assistant 消息，不混入 system
+-   `add(role, content)` — 追加消息，超出上限自动裁剪旧消息
+-   `get_messages()` → `list` — 返回 `[system] + history`，调用时动态组装
+-   `clear()` — 清空对话历史，system prompt 保留
+
+### agent.py（集成 Memory 后）
+
+-   删除了 `self.messages`，改用 `self.memory = Memory(system_prompt)`
+-   `chat()` 通过 `self.memory.get_messages()` 获取上下文
+-   成功回复后通过 `self.memory.add()` 保存
+
+### 关键设计决策
+
+-   **数据结构分离**：system prompt 与对话历史分开存储，避免 `pop(0)` 误删 system
+-   **委托模式**：Agent 不直接操作列表，委托 Memory 管理——以后换存储方式只改 Memory
+-   **自动裁剪**：`max_messages` 控制内存占用和 Token 消耗，为后续长对话打基础
+
 ------------------------------------------------------------------------
 
 # 已掌握 Python
@@ -125,6 +167,13 @@ agent_study/
 -   `return None` — 错误信号传递
 -   `from agent import Agent` — 直接导入类，避免模块名冲突
 
+## 组合与委托（Stage 3）
+
+-   对象嵌套 — `self.memory = Memory()`（PHP 里也叫组合）
+-   委托 — 自己不干活，交给成员对象干
+-   `pop(0)` — 删除列表第一个元素
+-   `len()` — 判断列表长度 
+
 ------------------------------------------------------------------------
 
 # 已掌握的软件设计思想
@@ -145,6 +194,13 @@ agent_study/
 -   **面向接口编程**：main.py 依赖 Agent 的 `chat()` 接口，不关心内部实现
 -   **向后兼容设计**：`__init__` 参数给默认值，老代码不加参数也能跑
 
+## Stage 3
+
+-   **数据结构分离**：不要把不同性质的数据混在一个列表里（system prompt vs history）
+-   **委托优于继承**：Agent 不继承 Memory，而是持有一个 Memory 实例——组合更灵活
+-   **防守式裁剪**：`max_messages` 用 `>` 而非 `>=`，保证恰好保留 N 条完整对话
+-   **内部状态不暴露**：`get_messages()` 返回新列表，不暴露内部 `self.history` 引用（当前实现可改进）
+
 ------------------------------------------------------------------------
 
 # 下一阶段（按顺序）
@@ -153,8 +209,8 @@ agent_study/
 
 ## Stage 3：真正的 Agent
 
--   Agent 类
--   Memory
+-   ~~Agent 类~~ ✅（Stage 2 已完成）
+-   ~~Memory~~ ✅
 -   Prompt 管理
 -   Tool 管理
 

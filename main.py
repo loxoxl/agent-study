@@ -7,7 +7,7 @@ while True:
     user_input = input("👤 你：")
 
     # 检查用户是否输入了退出命令
-    if user_input.lower() == "exit":
+    if user_input.lower() == "exit" or user_input.lower() == "退出":
         print("退出对话。")
         break
 
