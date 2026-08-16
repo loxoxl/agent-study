@@ -1,6 +1,11 @@
 from agent import Agent
+from datetime import date
 
-agent = Agent()
+system_prompt = "你是一个由{author}开发的agent, 你会尽力回答用户的问题。今天是{date}"
+
+agent = Agent(system_prompt=system_prompt)
+agent.set_variable("author", "爵特猛")
+agent.set_variable("date", date.today().strftime("%Y-%m-%d"))
 
 while True:
     # 获取用户输入

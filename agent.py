@@ -2,10 +2,11 @@ import llm
 import memory
 
 class Agent:
-    def __init__(self, system_prompt="你是一个由爵特猛开发的agent, 你会尽力回答用户的问题。"):
-        # 初始化Agent类，设置系统提示和内存
+    # 初始化Agent类，设置系统提示和内存
+    def __init__(self, system_prompt="你是一个乐于助人的助手, 你会尽力回答用户的问题"):
         self.memory = memory.Memory(system_prompt=system_prompt)
 
+    # 聊天函数，处理用户输入并返回大模型响应
     def chat(self, user_input):
         
         # 将用户输入添加到临时消息列表中
@@ -30,3 +31,7 @@ class Agent:
         self.memory.add("assistant", response)
 
         return response
+
+    def set_variable(self, key, value):
+        # 设置变量
+        self.memory.set_variable(key, value)

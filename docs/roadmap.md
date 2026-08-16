@@ -142,6 +142,39 @@ agent_study/
 -   **委托模式**：Agent 不直接操作列表，委托 Memory 管理——以后换存储方式只改 Memory
 -   **自动裁剪**：`max_messages` 控制内存占用和 Token 消耗，为后续长对话打基础
 
+---
+
+## Stage 3-2：Prompt 管理（Day 3）
+
+### memory.py 新增能力
+
+-   `from string import Formatter` — 内置的占位符提取工具
+-   `__init__(..., variables=None)` — 增加变量字典参数
+-   `Formatter().parse()` — 自动提取模板中的 `{占位符}`
+-   `self.variables = {field: "" for field in fields}` — 给每个占位符默认空值
+-   `self.variables.update(variables)` — 用传入值覆盖默认值
+-   `set_variable(key, value)` — 动态设置单个变量
+-   `get_messages()` — `system_prompt.format(**self.variables)` 动态渲染
+
+### agent.py 新增能力
+
+-   `set_variable(key, value)` — 委托给 `self.memory.set_variable()`
+
+### main.py 使用模板
+
+``` python
+system_prompt = "你是一个由{author}开发的agent, 你会尽力回答用户的问题。今天是{date}"
+agent = Agent(system_prompt=system_prompt)
+agent.set_variable("author", "爵特猛")
+agent.set_variable("date", date.today().strftime("%Y-%m-%d"))
+```
+
+### 关键设计决策
+
+-   **方案 B（默认值兜底）**：初始化时给所有占位符默认值，`format()` 永不 KeyError
+-   **模板与变量分离**：先存模板文本，运行时再 `format()` 填充——区别于 f-string
+-   **字面大括号转义**：prompt 里出现 JSON 等字面 `{}` 时用 `{{ }}` 转义
+
 ------------------------------------------------------------------------
 
 # 已掌握 Python
@@ -172,7 +205,17 @@ agent_study/
 -   对象嵌套 — `self.memory = Memory()`（PHP 里也叫组合）
 -   委托 — 自己不干活，交给成员对象干
 -   `pop(0)` — 删除列表第一个元素
--   `len()` — 判断列表长度 
+-   `len()` — 判断列表长度
+
+## 字符串模板与推导式（Stage 3）
+
+-   `str.format()` — 模板填充，`{name}` 占位符
+-   `**dict` — 字典解包成关键字参数
+-   `string.Formatter().parse()` — 提取模板中的占位符
+-   列表推导式 — `[item for item in list if 条件]`
+-   字典推导式 — `{key: value for item in list}`
+-   `dict.update()` — 合并/覆盖字典
+-   `{{ }}` — 字面大括号转义
 
 ------------------------------------------------------------------------
 
@@ -200,6 +243,8 @@ agent_study/
 -   **委托优于继承**：Agent 不继承 Memory，而是持有一个 Memory 实例——组合更灵活
 -   **防守式裁剪**：`max_messages` 用 `>` 而非 `>=`，保证恰好保留 N 条完整对话
 -   **内部状态不暴露**：`get_messages()` 返回新列表，不暴露内部 `self.history` 引用（当前实现可改进）
+-   **默认值兜底**：给所有占位符预设默认值，避免运行时 KeyError（方案 B）
+-   **模板与代码分离**：prompt 是数据，不是代码——先存模板，运行时再渲染
 
 ------------------------------------------------------------------------
 
@@ -211,7 +256,7 @@ agent_study/
 
 -   ~~Agent 类~~ ✅（Stage 2 已完成）
 -   ~~Memory~~ ✅
--   Prompt 管理
+-   ~~Prompt 管理~~ ✅
 -   Tool 管理
 
 ## Stage 4：Tool Calling
