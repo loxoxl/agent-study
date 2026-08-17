@@ -1,7 +1,19 @@
-from memory import Memory
+from agent import Agent
+from tool import Tool
 
-m = Memory(system_prompt="你是一个助手")
-print(m.get_messages())
+# 定义一个真实工具函数
+def get_time():
+    from datetime import datetime
+    return datetime.now().strftime("%H:%M:%S")
 
-m2 = Memory('返回 JSON：{{"name": "test"}}')
-print(m2.get_messages())
+# 包装成Tool对象
+time_tool = Tool("get_time",'获取当前时间', get_time)
+
+# 注册到Agent
+agent = Agent()
+agent.register_tool(time_tool)
+
+print(agent.get_tool_descriptions())  # 输出工具描述
+
+print(time_tool.run())  # 调用工具函数，获取当前时间
+

@@ -5,6 +5,7 @@ class Agent:
     # 初始化Agent类，设置系统提示和内存
     def __init__(self, system_prompt="你是一个乐于助人的助手, 你会尽力回答用户的问题"):
         self.memory = memory.Memory(system_prompt=system_prompt)
+        self.tools = {}
 
     # 聊天函数，处理用户输入并返回大模型响应
     def chat(self, user_input):
@@ -32,6 +33,15 @@ class Agent:
 
         return response
 
+    # 设置变量
     def set_variable(self, key, value):
-        # 设置变量
         self.memory.set_variable(key, value)
+
+    # 注册工具
+    def register_tool(self, tool):
+        self.tools[tool.name] = tool
+
+    # 返回所有工具的描述，用于给LLM提供工具信息
+    def get_tool_descriptions(self):
+        # 使用列表推导式，获取工具信息
+        return [{"name": name, "description": tool.description} for name, tool in self.tools.items()]
