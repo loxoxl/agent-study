@@ -175,6 +175,45 @@ agent.set_variable("date", date.today().strftime("%Y-%m-%d"))
 -   **模板与变量分离**：先存模板文本，运行时再 `format()` 填充——区别于 f-string
 -   **字面大括号转义**：prompt 里出现 JSON 等字面 `{}` 时用 `{{ }}` 转义
 
+---
+
+## Stage 3-3：Tool 管理（Day 3）
+
+### 当前项目结构
+
+``` text
+agent_study/
+├── .venv/
+├── .env
+├── config.py       → 环境变量和 API 配置
+├── llm.py          → LLM 调用封装
+├── memory.py       → Memory 类（消息存储 + 模板渲染）
+├── tool.py         → Tool 类（工具封装）
+├── agent.py        → Agent 类（协调 Memory + LLM + Tool）
+├── main.py         → 入口
+└── test.py         → 临时验证脚本
+```
+
+### tool.py
+
+-   `class Tool` — 封装一个可调用函数
+-   `name` — 工具名（LLM 标识用）
+-   `description` — 工具描述（LLM 理解用）
+-   `func` — 函数对象（执行用）
+-   `run(*args, **kwargs)` — 转发调用 `self.func(...)`
+
+### agent.py 新增能力
+
+-   `self.tools = {}` — 工具注册表（`{工具名: Tool对象}`）
+-   `register_tool(tool)` — 注册工具，`self.tools[tool.name] = tool`
+-   `get_tool_descriptions()` — 列表推导式返回所有工具描述，供 LLM 查看
+
+### 关键设计决策
+
+-   **注册表模式**：工具集中存放在字典里，Agent 从注册表查询
+-   **函数是一等公民**：函数对象可以作为参数传递（`get_time` 不带括号是函数本身，`get_time()` 是调用结果）
+-   **先管理后调用**：Stage 3 只搭架子（注册/列出），不真正调用——为 Stage 4 铺路
+
 ------------------------------------------------------------------------
 
 # 已掌握 Python
@@ -217,6 +256,13 @@ agent.set_variable("date", date.today().strftime("%Y-%m-%d"))
 -   `dict.update()` — 合并/覆盖字典
 -   `{{ }}` — 字面大括号转义
 
+## 函数与注册表（Stage 3）
+
+-   函数是一等公民 — `get_time`（函数对象）vs `get_time()`（调用结果）
+-   `*args` / `**kwargs` — 可变参数转发
+-   `dict.items()` — 遍历字典的键值对
+-   `dict.get(key)` — 安全取值，查不到返回 None
+
 ------------------------------------------------------------------------
 
 # 已掌握的软件设计思想
@@ -245,6 +291,8 @@ agent.set_variable("date", date.today().strftime("%Y-%m-%d"))
 -   **内部状态不暴露**：`get_messages()` 返回新列表，不暴露内部 `self.history` 引用（当前实现可改进）
 -   **默认值兜底**：给所有占位符预设默认值，避免运行时 KeyError（方案 B）
 -   **模板与代码分离**：prompt 是数据，不是代码——先存模板，运行时再渲染
+-   **注册表模式**：用字典集中管理可插拔的组件（工具），Agent 不硬编码工具列表
+-   **为扩展留接口**：先搭架子（管理）后实现（调用），逐步演进而非一步到位
 
 ------------------------------------------------------------------------
 
@@ -252,12 +300,7 @@ agent.set_variable("date", date.today().strftime("%Y-%m-%d"))
 
 ## ~~Stage 2：Python 面向对象~~ ✅ 完成
 
-## Stage 3：真正的 Agent
-
--   ~~Agent 类~~ ✅（Stage 2 已完成）
--   ~~Memory~~ ✅
--   ~~Prompt 管理~~ ✅
--   Tool 管理
+## ~~Stage 3：真正的 Agent~~ ✅ 完成
 
 ## Stage 4：Tool Calling
 
