@@ -2,9 +2,11 @@ from agent import Agent
 import logging
 from tool import Tool
 import sys
+import config
 
 # 设置日志级别为INFO，方便查看日志输出
-logging.basicConfig(level=logging.INFO)
+if config.AGENT_DEBUG == "1":
+    logging.basicConfig(level=logging.INFO)
 
 # 重新配置标准输出为UTF-8编码，确保在控制台正确显示中文字符
 sys.stdout.reconfigure(encoding='utf-8')
@@ -14,7 +16,7 @@ system_prompt = "你是一个由{author}开发的agent, 你会尽力回答用户
 
 agent = Agent(system_prompt=system_prompt)
 # 设置提示词里的变量
-agent.set_variable("author", "爵特猛")
+agent.set_variable("author", config.AUTHOR)
 # agent.set_variable("date", date.today().strftime("%Y-%m-%d"))
 
 # 定义一个时间工具函数
@@ -44,4 +46,4 @@ while True:
         continue
 
     # 打印大模型响应
-    print(f"🤖 爵特猛bot：{agent_response}")
+    print(f"🤖 {config.BOT_NAME}：{agent_response}")
